@@ -53,18 +53,29 @@ void rootsLegendre(int order, double *roots)
     if (order%2==1) {
         roots[order] = 0.0;
     }
-
 }
 
 
-void weightsLegendre(int order, double *weights, double *roots)
+void weightsLegendre(int order, double *weights, double *roots, double a, double b)
 {
+    double xm = (b-a)/2;
+    double xp = (b+a)/2;
     for (int i=0; i < order; i++) {
         double xk = roots[i];
         double dL = dLegendre(order, xk);
-        double w = 2.0/((1-xk*xk)*dL*dL);
+        double w = 2.0*xm/((1-xk*xk)*dL*dL);
         weights[i] = w;
     }
+    /* Calculating the mesh points and change the limits from x \in [-1,1] to t \in [a, b].
+     * We have that
+     *                          t = (b-a)/2*x + (b+a)/2
+     * The weights are conserved.
+     */
+
+    for (int i=0; i < order; i++) {
+        roots[i] = xm*roots[i]+xp;
+    }
+
 }
 
 
@@ -77,7 +88,7 @@ void gauss_laguerre(double *x, double *w, int n, double alf)
     int MAXIT = 10;
     double EPS = 3.0e-14;
 
-    for (i=1;i<=n;i++) {
+    for (i=1; i<=n; i++) {
         if (i == 1) {
             z=(1.0+alf)*(3.0+0.92*alf)/(1.0+2.4*n+1.8*alf);
         } else if (i == 2) {

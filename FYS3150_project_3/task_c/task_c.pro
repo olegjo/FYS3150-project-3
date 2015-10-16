@@ -4,7 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += main.cpp \
-      ../gaussianquadrature.cpp
+        ../lib.cpp
 
-HEADERS += ../gaussianquadrature.h
+HEADERS += ../lib.h
 
