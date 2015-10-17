@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../gaussianquadrature.h"
 #include <cmath>
+#include <time.h>
 
 using namespace std;
 
@@ -11,6 +12,9 @@ double integrand(double x1, double y1, double z1, double x2, double y2, double z
 
 int main()
 {
+    clock_t start, finish;
+    start = clock();
+
     int order = 10;
     double a = -1.7;
     double b = 1.7;
@@ -37,6 +41,9 @@ int main()
             }
         }
     }
+
+    finish = clock();
+    cout << endl << "Compution time: " << ((finish - start*1.0)/CLOCKS_PER_SEC) << endl;
 
     double const pi = 3.1415;
     double exact = 5*pi*pi/(16.0*16.0);

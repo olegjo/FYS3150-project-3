@@ -7,4 +7,3 @@ SOURCES += main.cpp \
        ../gaussianquadrature.cpp
 
 HEADERS += ../gaussianquadrature.h
-

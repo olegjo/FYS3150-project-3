@@ -1,0 +1,133 @@
+\documentclass[twoside, 11pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[colorlinks=true, citecolor=blue, linkcolor=black]{hyperref}
+
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\linespread{1.2} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
+\usepackage{multicol} % Used for the two-column layout of the document
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
+\usepackage{hyperref} % For hyperlinks in the PDF
+
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\alph{subsection}} % Roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\normalsize}{\thesection.\thesubsection}{1em}{} % Change the look of the section titles
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{FYS3150 - Computational physics $\bullet$ Project 3} % Custom header text
+\fancyfoot[C]{\small\thepage} % Custom footer text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{\vspace{-15mm}\fontsize{16pt}{13pt}\selectfont\textbf{Numerical integration using Gaussian quadrature- and Monte Carlo methods}} % Article title
+
+\author{
+\large
+Ole Gunnar Johansen\\[-2mm]%\thanks{A thank you or further information}\\[2mm] % Your name
+\normalsize University of Oslo \\[-2mm] % Your institution
+\normalsize \href{mailto:olegjo@ulrik.uio.no}{olegjo@student.matnat.uio.no} % Your email address
+\vspace{5mm}
+}
+\date{}
+
+\renewcommand{\d}{\mathrm{d}}
+
+\begin{document}
+\maketitle % Insert title
+\thispagestyle{fancy} % All pages have headers and footers
+
+
+\begin{abstract}
+
+\noindent
+abstract
+\end{abstract}
+
+\begin{multicols}{2}
+
+\section{Introduction}
+	Integrals play a huge role in science. Many of the integrals we encounter are possible to evaluate analytically, but a vast sample is not and numerical methods have to be used. Numerical integration is, however, prone to round off errors, especially if the functions which we are evaluating do not behave "nicely". The Newton-Cotes algorithm is a very easy algorithm to implement and understand, however it doesn't produce very reliable results. Supplementing this algorithm, there have been developed a lot of other schemes. In this project, I have implemented Gaussian quadrature with weight functions based on Legendre polynomials and Laguerre polynomials, as well as two Monte Carlo methods to solve a quantum mechanical integral, specifically the quantum mechanical expectation value of the correlation energy between two electrons which repel each other via the classical Coulomb interaction. 
+	
+	The integral in question can be solved in closed form and its exact value is therefore used in the discussion of the reliability of the different methods.
+
+\section{Theory/Methods}
+	\subsection{The Integral}
+		The integral we will evaluate is the six-dimensional ground state expectation value of the correlation energy between to electrons in a helium atom. To do this, we assume that each electron can be modelled via the single-particle wave function
+		\begin{align}
+			\psi_{1s} (\mathbf{r}_i) = e^{-\alpha r_i}
+		\end{align}
+		where $\alpha$ is a parameter corresponding to the charge of the nucleus around which the electrons are orbiting, the position vector $\mathbf{r}_i$ for electron $i$ is given by
+		\begin{align}
+			\mathbf{r}_i = x_i \mathbf{e}_x + y_i \mathbf{e}_y + z_i \mathbf{e}_z
+		\end{align}
+		with magnitude
+		\begin{align}
+			r_i = \sqrt{x_i^2 + y_i^2 + z_i^2}.
+		\end{align}
+		
+		The wave function for two electrons is then given by
+		\begin{align}
+			\Psi(\mathbf{r}_1, \mathbf{r}_2) = \psi(\mathbf{r}_2)\psi(\mathbf{r}_2) = e^{-\alpha(r_1 + r_2)}
+		\end{align}
+		Note that this is not normalized, however this will only change the integral by a factor equal to the normalization factor, and is not of interest in this project.
+		
+		The integral which we wish to solve is then
+		\begin{align}
+			\langle \frac{1}{|\mathbf{r}_1 - \mathbf{r}_2|} \rangle = \int_{-\infty}^{\infty} \d\mathbf{r}_1 \\mathbf{r}_2 e^{-2\alpha(r_1+r_2)} \frac{1}{|\mathbf{r}_1 - \mathbf{r}_2|}
+		\end{align}
+		where the differentials $\mathbf{r}_i$ are the volume elements in Cartesian coordinates. The above integral has the closed form answer $5\pi^2/16^2$.
+		
+		Numerically, the integration limits of $\pm \infty$ are difficult to implement. However, if we make a change of variables to spherical coordinates, we loose 4 out of six infinite integrals.
+		In spherical coordinates, the volume elements can be written as
+		\begin{align}
+			\d\mathbf{r}_i = r_i^2\sin (\theta_i)\d \theta_i \d \phi_i \d r_i
+		\end{align}
+		where $r_i \in [0, \infty)$, $\theta_i \in [0, \pi]$ and $\phi_i \in [0, 2\pi]$. The magnitude of the distance between the electrons is 
+		\begin{align}
+			|\mathbf{r}_1 - \mathbf{r}_2| = r_{12} = \sqrt{r_1^2 + r_2^2 - 2r_1 r_2 \cos \beta}
+		\end{align}
+		where
+		\begin{align}
+			\cos\beta = \cos(\theta_1) \cos (\theta_2) + \sin(\theta_1)\sin(\theta_2) \cos(\phi_1 - \phi_2) \nonumber
+		\end{align}
+		The integral in spherical coordinates is then
+		\begin{align}
+			\langle \frac{1}{r_{12}} \rangle = 
+		\end{align}
+	\subsection{Gaussian Quadrature}
+		
+		
+
+\section{Results}
+
+
+
+
+
+\section{Results}
+
+
+%\bibliographystyle{plain}
+%\bibliography{references}
+
+
+\end{multicols}
+
+\end{document}
