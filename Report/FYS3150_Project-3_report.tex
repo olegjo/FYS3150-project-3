@@ -3,9 +3,9 @@
 \usepackage{amssymb}
 \usepackage[colorlinks=true, citecolor=blue, linkcolor=black]{hyperref}
 
-\usepackage[sc]{mathpazo} % Use the Palatino font
+%\usepackage[sc]{mathpazo} % Use the Palatino font
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
-\linespread{1.2} % Line spacing - Palatino needs more space between lines
+\linespread{1} % Line spacing - Palatino needs more space between lines
 \usepackage{microtype} % Slightly tweak font spacing for aesthetics
 
 \usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
@@ -20,10 +20,11 @@
 \renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
 
 \usepackage{titlesec} % Allows customization of titles
-\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
-\renewcommand\thesubsection{\alph{subsection}} % Roman numerals for subsections
-\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
-\titleformat{\subsection}[block]{\normalsize}{\thesection.\thesubsection}{1em}{} % Change the look of the section titles
+%\renewcommand\thesection{\textbf{\Roman{section}}} % Roman numerals for the sections
+%\renewcommand\thesubsection{\roman{subsection}} % Roman numerals for subsections
+\titleformat{\section}[block]{\bf\Large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\bf\large\scshape\centering}{\thesubsection}{1em}{} % Change the look of the section titles
+\titleformat{\subsubsection}[block]{\bf\normalsize\scshape\centering}{\thesubsubsection}{1em}{}
 
 \usepackage{fancyhdr} % Headers and footers
 \pagestyle{fancy} % All pages have headers and footers
@@ -48,6 +49,7 @@ Ole Gunnar Johansen\\[-2mm]%\thanks{A thank you or further information}\\[2mm] %
 \date{}
 
 \renewcommand{\d}{\mathrm{d}}
+\renewcommand{\eqref}[1]{\eqref{#1}}
 
 \begin{document}
 \maketitle % Insert title
@@ -60,7 +62,7 @@ Ole Gunnar Johansen\\[-2mm]%\thanks{A thank you or further information}\\[2mm] %
 abstract
 \end{abstract}
 
-\begin{multicols}{2}
+%\begin{multicols}{1}
 
 \section{Introduction}
 	Integrals play a huge role in science. Many of the integrals we encounter are possible to evaluate analytically, but a vast sample is not and numerical methods have to be used. Numerical integration is, however, prone to round off errors, especially if the functions which we are evaluating do not behave "nicely". The Newton-Cotes algorithm is a very easy algorithm to implement and understand, however it doesn't produce very reliable results. Supplementing this algorithm, there have been developed a lot of other schemes. In this project, I have implemented Gaussian quadrature with weight functions based on Legendre polynomials and Laguerre polynomials, as well as two Monte Carlo methods to solve a quantum mechanical integral, specifically the quantum mechanical expectation value of the correlation energy between two electrons which repel each other via the classical Coulomb interaction. 
@@ -90,7 +92,7 @@ abstract
 		
 		The integral which we wish to solve is then
 		\begin{align}
-			\langle \frac{1}{|\mathbf{r}_1 - \mathbf{r}_2|} \rangle = \int_{-\infty}^{\infty} \d\mathbf{r}_1 \\mathbf{r}_2 e^{-2\alpha(r_1+r_2)} \frac{1}{|\mathbf{r}_1 - \mathbf{r}_2|}
+			\langle \frac{1}{|\mathbf{r}_1 - \mathbf{r}_2|} \rangle = \int_{-\infty}^{\infty} \d\mathbf{r}_1 \mathbf{r}_2 e^{-2\alpha(r_1+r_2)} \frac{1}{|\mathbf{r}_1 - \mathbf{r}_2|} \label{eq: unchanged integral}
 		\end{align}
 		where the differentials $\mathbf{r}_i$ are the volume elements in Cartesian coordinates. The above integral has the closed form answer $5\pi^2/16^2$.
 		
@@ -109,9 +111,45 @@ abstract
 		\end{align}
 		The integral in spherical coordinates is then
 		\begin{align}
-			\langle \frac{1}{r_{12}} \rangle = 
+			\langle \frac{1}{r_{12}} \rangle = \int \d r_1 \d r_2 \d \theta_1 \d \theta_2 \d \phi_1 \d \phi_2 \frac{1}{r_{12}} r_1^2r_2^2\sin(\theta_1)\sin(\theta_2) e^{-2\alpha(r_1+r_2)}
 		\end{align}
+		
+		Simplifying further, using $u = 2\alpha r_1$ and $v = 2\alpha r_2$, we obtain finally
+		\begin{align}
+			\langle \frac{1}{r_{12}} \rangle = \frac{1}{(2\alpha)^5} \int \d u \d v \d \theta_1 \d \theta_2 \d \phi_1 \d \phi_2 \frac{1}{\sqrt{u^2 + v^2 - 2uv\cos\beta}} u^2v^2\sin(\theta_1)\sin(\theta_2) e^{-u}e^{-v}
+		\end{align}
+		
 	\subsection{Gaussian Quadrature}
+		The basic idea behind Gaussian quadrature is to approximate the integral of a function $f$ by
+		\begin{align}
+			I = \int_{a}^{b} f(x) \ \d x  = \int_{a}^{b} W(x)g(x) \ \d x \approx \sum_{i=1}^N w_i g(x_i)
+		\end{align}
+		where $W(x)$ is a weight function obtained through a polynomial which is orthogonal in some interval $[a, b]$. Two such weight functions are $W(x)=1$ which uses Legendre polynomials in the interval $x\in[-1, 1]$ and $W(x) = x^\alpha e^{-x}$ which uses the Laguerre polynomials in the interval $x \in [0, \infty)$. 
+		
+		\subsubsection{Gauss-Legendre Quadrature}
+			As indicated above, the weight function used in Gauss-Legendre Quadrature is $W(x)=1$. The function which we wish to integrate is therefore the same, that is
+			\begin{align}
+				I = \int_{-1}^{1} f(x) \ \d x \approx \sum_{i=1}^N w_i f(x_i)
+			\end{align}
+			where $x_i$ are the abscissas  given by the roots of the Legendre polynomial $P_N$ of degree $N$ and $w_i$ are the weights given by
+			\begin{align*}
+				w_i = \frac{2}{(1-x_i^2)[P'_N(x_i)]^2}
+			\end{align*}
+			
+			For this project, I have developed a code which returns the weights and  abscissas for the Legendre polynomial of degree $N$. The codes can be found in the file \texttt{gaussianquadrature.cpp}. The relevant functions are \texttt{legendreRoots} and \texttt{legendreWeights}.
+			
+			The function \texttt{legendreRoots} begins with an initial guess for the $i$-th root 
+			\begin{align*}
+				x_\mathrm{guess} = \cos \left( \pi \frac{4(i+1) - 1}{4N + 2} \right) 
+			\end{align*}
+			and then approximates the real root using Newtons method. 
+			
+			
+			Note that the direct use of this method will integrate a function in the interval $x\in[-1,1]$. Our function is, however, in the limits $\pm \infty$. We can always change variables from the limits $x \in [a, b]$ to $x \in [-1, 1]$ using
+			\begin{align}
+				\int_{a}^{b} f(x) \ \d x = \frac{b-a}{2} \int_{-1}^{1} f\left( \frac{b-a}{2}x_i + \frac{b+a}{2} \right) \ \d x
+			\end{align}
+			which does not help us evaluating the infinite integrals of eq.~\eqref{eq: unchanged integral}. To deal with this problem, note that eq.~\eqref{eq: unchanged integral}
 		
 		
 
@@ -128,6 +166,6 @@ abstract
 %\bibliography{references}
 
 
-\end{multicols}
+%\end{multicols}
 
 \end{document}
