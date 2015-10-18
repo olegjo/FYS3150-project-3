@@ -37,11 +37,11 @@ comp_time = np.array([59.28, 60.74, 60.08, 60.05, 60.41])
 variance = 7.14382e-06
 dooooit(N, result, comp_time, variance)
 
-# N = 1e9
-# result = 
-# comp_time = np.array([])
-# variance = 
-# dooooit(N, result, comp_time, variance)
+N = 1e9
+result = 0.192764
+comp_time = np.array([601.94, 605.15, 599.73])
+variance = 7.12096e-06
+dooooit(N, result, comp_time, variance)
 
 
 

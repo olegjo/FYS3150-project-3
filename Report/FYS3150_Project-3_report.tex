@@ -73,7 +73,7 @@ Ole Gunnar Johansen\\[0mm]%\thanks{A thank you or further information}\\[2mm] % 
 \begin{abstract}
 
 \noindent
-abstract
+In this project, I have been looking at the infinite six-dimensional integral needed to find the expectation value of the quantum mechanical correlation energy between two electrons in the helium atom. I have been using Gauss-Legendre quadrature, Gauss-Laguerre quadrature, a "brute force" Monte Carlo approach, and finally a Monte Carlo approach with importance sampling. Computation times are compared for all methods and the latter method produced very good results in a matter of a few seconds, and the first did not produce comparable results even after 7 minutes. 
 \end{abstract}
 
 %\begin{multicols}{1}
@@ -258,10 +258,10 @@ gauss_laguerre(r, weightsR, N, 2);
 			
 \section{Results}
 	\subsection{Gauss-Legendre Quadrature}
-		Table~\ref{table: results gauss-legendre} shows the results of the program which calculates the integral of eq.~\eqref{eq: unchanged integral} using Gauss-Legendre quadrature. 
-		\begin{table}[H]
+		Table~\ref{table: results gauss-legendre} shows the results of the program which calculates the integral of eq.~\eqref{eq: unchanged integral} using Gauss-Legendre quadrature. We see that the numerical integral does seem to converge, however, at a very unimpressive rate. With $N=40$, the relative error is still at 2\%, which in many cases is not good enough, and considering the over 400 seconds one have to wait to get that answer, it is not hard to conclude that this is not a very good method. The results could, however be improved by more carefully chosen integration limits, however this is not tested.
+		\begin{table}[h]
 			\centering
-			\caption{Results from a run of the program which calculates the integral using Gauss-Legendre quadrature. The CPU-times listed are averaged over 10 runs of the program.}
+			\caption{Results from a run of the program which calculates the integral using Gauss-Legendre quadrature. The CPU-times listed are averaged over 10 runs of the program. Exact value is 0.192766.}
 			\label{table: results gauss-legendre}
 			\begin{tabular}{|c|c|c|c|}
 \hline
@@ -273,15 +273,18 @@ gauss_laguerre(r, weightsR, N, 2);
 30 	&	0.18580	&	0.03616			&	$78.84 \pm 0.94$ s	\\ \hline
 36 	&	0.18782	&	0.02567			&	$233.70 \pm 1.70$ s	\\ \hline
 40 	&	0.18867	&	0.02125			&	$444.08 \pm 7.15$ s	\\ \hline			
-			\end{tabular}\\
-		\textbf{Exact:} 0.192766
+			\end{tabular}
 		\end{table}
 	
 	
 	\subsection{Gauss-Laguerre Quadrature}
-		\begin{table}[H]
+		Compared to Gauss-Legendre quadrature, the Gauss-Laguerre Quadrature proves to return a lot better results. See table~\ref{table: results gauss-laguerre}. The results are better than those of Gauss-Legendre at $N=40$, already at $N=16$, with a time needed of only 4 seconds. The results here, too, get better for larger $N$, but the computation time is also rapidly increasing, but we do get a reasonable result even for relatively short CPU-times needed.
+		
+		This proves to show that a little thinking can make the problem much easier, when it comes to numerical methods.
+		
+		\begin{table}[h]
 			\centering
-			\caption{Results from a run of the program which calculates the integral using Gauss-Laguerre quadrature. The CPU-times listed are averaged over 4 runs of the program.}
+			\caption{Results from a run of the program which calculates the integral using Gauss-Laguerre quadrature. The CPU-times listed are averaged over 4 runs of the program. Exact value is 0.192766.}
 			\label{table: results gauss-laguerre}
 			\begin{tabular}{|c|c|c|c|}
 \hline
@@ -296,15 +299,52 @@ gauss_laguerre(r, weightsR, N, 2);
 			\end{tabular}
 		\end{table}
 	
+	\subsection{Brute Force MC}
+		The results from the brute force MC integration can be found in table~\ref{table: results brute force MC}. As expected, the results do get better as $N$ (the number of MC samples) increases. From the results in table~\ref{table: results brute force MC} we can also see that this method converges much faster than the method based on Gauss-Legendre quadrature, but still, not as good as that based on Gauss-Laguerre Quadrature. 
+		
+		Note also that the relative error increases for $N=10^6$ and $N=10^7$. I cannot find the reason for this.
+		
+		\begin{table}[h]
+			\centering
+			\caption{Results from a run of the program which calculates the integral using the brute force MC method. The CPU-times are averaged over 5 runs of the program. The exact value of the integral is 0.192766.}
+			\label{table: results brute force MC}
+			\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{N} 		&	\textbf{Result}		&	\textbf{Relative error}	&	\textbf{Variance}	&	\textbf{CPU-time} \\ \hline
+$10^5$ 	&	0.19726	&	0.02330	&	1.86e-09	&	$0.04 \pm 0.02$ s	\\ \hline 
+$10^6$ 	&	0.13695	&	0.28954	&	8.29e-10	&	$0.59 \pm 0.17$ s	\\ \hline 
+$10^7$ 	&	0.16192	&	0.16002	&	8.77e-09	&	$3.37 \pm 0.04$ s	\\ \hline 
+$10^8$ 	&	0.19467	&	0.00987	&	2.64e-08	&	$33.66 \pm 0.34$ s	\\ \hline 
+$10^9$ 	&	0.19449	&	0.00897	&	1.96e-08	&	$336.34 \pm 6.48$ s	\\ \hline 
+			\end{tabular}
+		\end{table}
+	
+	\subsection{MC Integration with Importance Sampling}
+		One does not need to look at the results in table~\ref{table: results MC importance} to see that this is the method producing the best results, by far. Even at $N=10^6$ MC sampling points and a computation time of only 0.63 s, we achieve better results than any of the previous methods. Prolonging the computation times to $\sim 600$ s for $N=10^9$ is then just to rub it in. The results are really astounding. 
+		
+		Also, it is worth noting that, except for the brute force MC, this method was the easiest to implement, and would also be very easy to parallelize. Due to an update issue with the latest OSX El Capitan, the C++ parallelization library openMP is not working, and parallelizing has not been implemented in the code.
+		\begin{table}[h]
+			\centering
+			\caption{Results from a run of the program which calculates the integral using the MC method with importance sampling. The CPU-times are averaged over 5 runs of the program. The exact value of the integral is 0.192766.}
+			\label{table: results MC importance}
+			\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{N} 		&	\textbf{Result}		&	\textbf{Relative error}	&	\textbf{Variance}	&	\textbf{CPU-time} \\ \hline
+$10^5$ 	&	0.19437	&	0.00834	&	7.12e-06	&	$0.06 \pm 0.00$ s	\\ \hline 
+$10^6$ 	&	0.19298	&	0.00109	&	6.74e-06	&	$0.63 \pm 0.05$ s	\\ \hline 
+$10^7$ 	&	0.19272	&	0.00025	&	7.41e-06	&	$6.04 \pm 0.11$ s	\\ \hline 
+$10^8$ 	&	0.19279	&	0.00012	&	7.14e-06	&	$60.11 \pm 0.49$ s	\\ \hline 
+$10^9$ 	&	0.19276	&	0.00001	&	7.12e-06	&	$602.27 \pm 2.23$ s	\\ \hline 
+			\end{tabular}
+		\end{table}
 
-
-
-
-\section{Discussion}
 
 \section{Conclusion}
-
-
+	We have seen that a simple rewriting of the problem can help us a long way when dealing with numerical integration - especially when dealing with infinite integrals. Gaussian quadrature is very useful in this sense, and especially Gauss-Laguerre quadrature, when the integral can be rewritten to involve limits from 0 to $\infty$, which is often the case in science.
+	
+	That said, the quadrature methods are very time consuming, and Monte Carlo methods are much more efficient. 
+	
+	To get results that are off by less than 1\% of the exact value of the integral in question, one needs a Laguerre polynomial of degree 40 and over 20 minute of time to waste when using Gauss-Laguerre quadrature, compared to $10^8$ sampling points and 33 seconds for the brute force MC, and finally <$10^5$ sampling points and <0.06 seconds for the MC method with importance sampling. With Gauss-Legendre quadrature, the best results were more than 2\% off the exact value.
 %\bibliographystyle{plain}
 %\bibliography{references}
 
