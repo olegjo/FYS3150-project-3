@@ -9,9 +9,10 @@ def dooooit(N, result, comp_time):
 	# print "Result         =", result
 	# print "Relative error =", abs(result-exact)/exact
 
-	print "%i 	&	%.5f	&	%.5f			&	%.2f	\\\ " % (N, result, abs(result-exact)/exact, np.average(comp_time))
+	print "%i 	&	%.5f	&	%.5f			&	$%.2f \pm %.2f$ s	\\\ \hline" % (N, result, abs(result-exact)/exact, np.average(comp_time), np.std(comp_time))
 
-print "N 	&	Result	&	Relative error	&	CPU-time \\\ " 
+print "\hline"
+print "\\textbf{N} 	&	\\textbf{Result}	&	\\textbf{Relative error}	&	\\textbf{CPU-time} \\\ \hline " 
 
 N = 10
 result = 0.129834

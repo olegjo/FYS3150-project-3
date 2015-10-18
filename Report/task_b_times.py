@@ -2,16 +2,15 @@ import numpy as np
 
 def dooooit(N, result, comp_time):
 	exact = 5*np.pi**2/16**2
-	if len(comp_time) != 10:
-		print "Something went wrong with N =", N
 	# print "N              =", N
 	# print "Average time   =", np.average(comp_time), "seconds"
 	# print "Result         =", result
 	# print "Relative error =", abs(result-exact)/exact
 
-	print "%i 	&	%.5f	&	%.5f			&	%.2f	\\\ " % (N, result, abs(result-exact)/exact, np.average(comp_time))
+	print "%i 	&	%.5f	&	%.5f			&	$%.2f \pm %.2f$ s	\\\ \hline" % (N, result, abs(result-exact)/exact, np.average(comp_time), np.std(comp_time))
 
-print "N 	&	Result	&	Relative error	&	CPU-time \\\ " 
+print "\hline"
+print "\\textbf{N} 	&	\\textbf{Result}	&	\\textbf{Relative error}	&	\\textbf{CPU-time} \\\ \hline " 
 
 N = 10
 result = 0.186457

@@ -2,6 +2,9 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[colorlinks=true, citecolor=blue, linkcolor=black]{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
 
 %\usepackage[sc]{mathpazo} % Use the Palatino font
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
@@ -10,10 +13,22 @@
 
 \usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
 \usepackage{multicol} % Used for the two-column layout of the document
-\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\renewcommand{\figurename}{\bfseries\scshape Fig.}
+\renewcommand{\tablename}{\bfseries\scshape Table}
+\usepackage[hang, small,labelfont=sc,up,textfont=normalfont,up]{caption} % Custom captions under/above floats in tables or figures
 \usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
 \usepackage{hyperref} % For hyperlinks in the PDF
 
+\usepackage{listings}
+\lstset{language=C++,
+				backgroundcolor=\color{black!5},
+                basicstyle=\scriptsize ,
+                keywordstyle=\color{blue}\ttfamily,
+                stringstyle=\color{red}\ttfamily,
+                commentstyle=\color{green}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#},
+                tabsize = 1,
+}
 
 \usepackage{abstract} % Allows abstract customization
 \renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
@@ -30,7 +45,7 @@
 \pagestyle{fancy} % All pages have headers and footers
 \fancyhead{} % Blank out the default header
 \fancyfoot{} % Blank out the default footer
-\fancyhead[C]{FYS3150 - Computational physics $\bullet$ Project 3} % Custom header text
+\fancyhead[C]{FYS3150 - Computational physics $~ \cdot ~$ Project 3} % Custom header text
 \fancyfoot[C]{\small\thepage} % Custom footer text
 
 %----------------------------------------------------------------------------------------
@@ -41,15 +56,14 @@
 
 \author{
 \large
-Ole Gunnar Johansen\\[-2mm]%\thanks{A thank you or further information}\\[2mm] % Your name
-\normalsize University of Oslo \\[-2mm] % Your institution
+Ole Gunnar Johansen\\[0mm]%\thanks{A thank you or further information}\\[2mm] % Your name
+\normalsize University of Oslo \\[0mm] % Your institution
 \normalsize \href{mailto:olegjo@ulrik.uio.no}{olegjo@student.matnat.uio.no} % Your email address
 \vspace{5mm}
 }
 \date{}
 
 \renewcommand{\d}{\mathrm{d}}
-\renewcommand{\eqref}[1]{\eqref{#1}}
 
 \begin{document}
 \maketitle % Insert title
@@ -114,17 +128,36 @@ abstract
 			\langle \frac{1}{r_{12}} \rangle = \int \d r_1 \d r_2 \d \theta_1 \d \theta_2 \d \phi_1 \d \phi_2 \frac{1}{r_{12}} r_1^2r_2^2\sin(\theta_1)\sin(\theta_2) e^{-2\alpha(r_1+r_2)}
 		\end{align}
 		
-		Simplifying further, using $u = 2\alpha r_1$ and $v = 2\alpha r_2$, we obtain finally
+		Simplifying further, using $u = 2\alpha r_1$ and $v = 2\alpha r_2$ ($u\in [0,\infty$, $v\in [0, \infty)$), we obtain finally
 		\begin{align}
-			\langle \frac{1}{r_{12}} \rangle = \frac{1}{(2\alpha)^5} \int \d u \d v \d \theta_1 \d \theta_2 \d \phi_1 \d \phi_2 \frac{1}{\sqrt{u^2 + v^2 - 2uv\cos\beta}} u^2v^2\sin(\theta_1)\sin(\theta_2) e^{-u}e^{-v}
+			\langle \frac{1}{r_{12}} \rangle = \frac{1}{(2\alpha)^5} \int \d u \d v \d \theta_1 \d \theta_2 \d \phi_1 \d \phi_2 \frac{1}{\sqrt{u^2 + v^2 - 2uv\cos\beta}} u^2v^2\sin(\theta_1)\sin(\theta_2) e^{-u}e^{-v} \label{eq: integral in spherical coordinates, u, v}
 		\end{align}
 		
 	\subsection{Gaussian Quadrature}
 		The basic idea behind Gaussian quadrature is to approximate the integral of a function $f$ by
 		\begin{align}
-			I = \int_{a}^{b} f(x) \ \d x  = \int_{a}^{b} W(x)g(x) \ \d x \approx \sum_{i=1}^N w_i g(x_i)
+			I = \int_{a}^{b} f(x) \ \d x  = \int_{a}^{b} W(x)g(x) \ \d x \approx \sum_{i=1}^N w_i g(x_i) \label{eq: gaussian quadrature basic idea}
 		\end{align}
 		where $W(x)$ is a weight function obtained through a polynomial which is orthogonal in some interval $[a, b]$. Two such weight functions are $W(x)=1$ which uses Legendre polynomials in the interval $x\in[-1, 1]$ and $W(x) = x^\alpha e^{-x}$ which uses the Laguerre polynomials in the interval $x \in [0, \infty)$. 
+		
+		\subsubsection{The 6-Dimensional Integral}\label{section: the 6-dimensional integral}
+			Eq.~\eqref{eq: gaussian quadrature basic idea} shows the formalism for calculating a one-dimensional integral. For a multidimensional integral, it is quite similar, only we need a number of sums equal to the number of dimensions. In a computer program, this is done with $n$ for loops when $n$ is the number of dimensions. For the 6-dimensional case a code snippet could look like
+			
+			\begin{lstlisting}
+double integral = 0;
+for (int i=0; i < order; i++) {
+		for (int j=0; j < order; j++) {
+		for (int k=0; k < order; k++) {
+		for (int l=0; l < order; l++) {
+		for (int m=0; m < order; m++) {
+		for (int n=0; n < order; n++) {
+			integral += w_d1[i]*w_d2[j]*w_d3[k]*w_d4[l]*w_d5[m]*w_d6[n]*
+						integrand(x_d1[i], x_2[j], x_d3[k], x_d4[l], x_d5[m], x_d6[n]);
+		}}}}}
+}
+			\end{lstlisting}
+			where \texttt{w\_di} and \texttt{z\_di} are arrays containing the weights and roots associated with the \texttt{i}-th dimension in the proper interval, and \texttt{integrand} is a function evaluating the integrand for the six dimensions. 
+			
 		
 		\subsubsection{Gauss-Legendre Quadrature}
 			As indicated above, the weight function used in Gauss-Legendre Quadrature is $W(x)=1$. The function which we wish to integrate is therefore the same, that is
@@ -149,17 +182,127 @@ abstract
 			\begin{align}
 				\int_{a}^{b} f(x) \ \d x = \frac{b-a}{2} \int_{-1}^{1} f\left( \frac{b-a}{2}x_i + \frac{b+a}{2} \right) \ \d x
 			\end{align}
-			which does not help us evaluating the infinite integrals of eq.~\eqref{eq: unchanged integral}. To deal with this problem, note that eq.~\eqref{eq: unchanged integral}
+			which does not help us evaluating the infinite integrals of eq.~\eqref{eq: unchanged integral}. To deal with this problem, note that eq.~\eqref{eq: unchanged integral} involves an exponential on the form $e^{-x}$ which approached 0 quickly. To evaluate the integral using Gauss-Legendre quadrature, the limits $a$ and $b$ are therefore set to a value where $e^{-2\alpha r}$ is more or less zero. Fig.~\ref{fig: integration limits Gauss-Legendre} shows a plot of $e^{-\alpha |x|}$, and by inspection such limits could be set to $\pm 5$. 
+			
+			Since we are now working in Cartesian coordinates, all directions are weighted the same and we need only make one call to the functions that calculate the roots and weights of the Legendre polynomial, i.e. \texttt{w\_d1}=\texttt{w\_d2}=...=\texttt{w\_d6}=\texttt{w} and similarly  \texttt{x\_d1}=\texttt{x\_d2}=...=\texttt{x\_d6}=\texttt{x} in the code in section~\ref{section: the 6-dimensional integral}. The \texttt{integrand} function is now simply the integrand in eq.~\eqref{eq: unchanged integral}.
+			
+			\begin{figure}
+				\centering
+				\includegraphics[scale=0.7, clip=true, trim= 0 0 0 0]{FYS3150-project-3-plot-taska-limits.pdf}
+				\caption{Plot of $e^{-\alpha |x|}$ to find appropriate integration limits for Gauss-Legendre quadrature. We see that the function is more or less zero for $x\approx 5$.}
+				\label{fig: integration limits Gauss-Legendre}
+			\end{figure}
 		
 		
-
+		\subsubsection{Gauss-Laguerre Quadrature}
+			Gauss-Laguerre quadrature is somewhat more sophisticated than Gauss-Legendre. In this case, the weight function is given by $x^\alpha e^{-x}$ and the associated polynomial is the Laguerre polynomials which are orthogonal in the interval $x\in [0, \infty)$. Looking back at eq.~\eqref{eq: integral in spherical coordinates, u, v}, we see that this rewriting of the original integral involves factors of the kind $x^\alpha e^{-x}$, and so, using the formalism in eq.~\eqref{eq: gaussian quadrature basic idea}, these factors can be taken out of the integral when we are employing a proper polynomial, namely Laguerre polynomials. The nice thing now, is that the mapping we have made is between 0 and $\infty$, and the need of an approximation is not necessary, as was the case for Gauss-Legendre quadrature.
+			
+			The angular part of eq.~\eqref{eq: integral in spherical coordinates, u, v} can be integrated using Legendre polynomials, also without limit approximations. 
+			
+			Since the limits we are now working with change depending on to what dimension in the spherical coordinate system we are integrating over, the weights and roots will also change accordingly. However, we can pair up the dimensions in one radial part (the one which is calculated using Laguerre polynomials), a $\phi$ part and a$\theta$ part. We therefore need to make a function call like
+			\begin{lstlisting}
+rootsLegendre(N, theta);
+weightsLegendre(N, weightsTheta, theta, 0, pi);
+rootsLegendre(N, phi);
+weightsLegendre(N, weightsPhi, phi, 0, 2*pi);
+gauss_laguerre(r, weightsR, N, 2);
+			\end{lstlisting}
+			
+			and then the integrand is simply
+			\begin{align}
+				\frac{1}{u^2 + v^2 - 2uv \cos\beta} \sin(\theta_1) \sin(\theta_2).
+			\end{align}
+		
+		
+	\subsection{Monte Carlo Integration}
+		The basic philosophy in Monte Carlo (MC) integration is to uniformly choose a set of points in a given interval $[a, b]$ and calculate the value of the integrand for each random point. We look at each value for the integrand as a bar of width $1/N$, so the integral can the be approximated by
+		\begin{align}
+			I = \int_{0}^{1} f(x) \ \d x \approx \frac{1}{N} \sum_{i=1}^N f(x_{i-1/2})
+		\end{align}
+		when a uniform probability distribution function (PDF) ($p(x)=1$) is used. For any other PDF, the integral can be approximated by
+		\begin{align}
+			I = \int_{0}^{1} f(x) \ \d x \approx \frac{1}{N} \sum_{i=1}^N f(x_i)p(x_i) = \langle f \rangle 
+		\end{align}
+		
+		The error in the stochastic experiment is given by the variance
+		\begin{align}
+			\sigma^2 = \langle f^2 \rangle - \langle f \rangle ^2
+		\end{align}
+		
+		
+		
+				 
+		\subsubsection{Brute Force MC}
+			Not all dissimilar to the Gauss-Legendre quadrature, the brute force MC integration method takes the original integrand and churns through it by throwing random valued in using the uniform PDF. Similarly to said quadrature, we now too have limits which are not what we wish, namely $[0, 1]$, not $(-\infty, \infty)$. To deal with this, we make again a change of variables, assuming the integrand is sufficiently close to zero at $x\approx 5$ (ref. above discussion). The change of variables is then
+			\begin{align}
+				z_i = a + (b-a)x_i
+			\end{align}
+			where $a$ and $b$ are the new limits. Through any change of variables we get a Jacobi determinant, which in this case is $(b-a)^6$ since we are dealing with a 6-dimensional integral and all dimensions get the same change of variables. 
+		
+		
+		\subsubsection{MC Integration with Importance Sampling}
+			Again, we employ a change of variables to spherical coordinates resulting in eq.~\eqref{eq: integral in spherical coordinates, u, v}. We see that some values in the $u$ and $v$-directions are more likely than others, due to the exponentials e$e^{-u}$ and $e^{-v}$. This is the main idea behind importance sampling - a change of variables where we make the transition from $[0, 1]$ to $[a, b]$ making some values more likely.
+			
+			We are now transforming the integral as follows
+			\begin{align}
+				I = \int_{a}^{b} F(x) \ \d x = \int_{a}^{b} p(x) \frac{F(x)}{p(x)} \ \d x = \int_{\tilde{a}}^{\tilde{b}} \frac{F(y(x))}{p(y(x))} \ \d x
+			\end{align}
+			By choosing the PDF $p(u)=e^{-u}$ and $p(v)=e^{-v}$ we can omit these terms in eq.~\eqref{eq: integral in spherical coordinates, u, v}, and at the same time set the new values for $v$ and $u$ to (this is just a rewriting of $x_i=e^{-u_i}$)
+			\begin{align*}
+				u_i = -\ln (1 - x_i)
+			\end{align*}
+			and similarly for $v_i$. Note again, that the limits of this new variable is $[0, \infty)$ - just as desired! Note that since all we have done is multiply the integrand by a factor of $p(x)/p(x)=1$, no Jacobi determinant is needed.
+			
+		 The angular parts are just a brute force change of variables, and results in a Jacobi determinant of $4\pi^4$.
+			
+			
 \section{Results}
+	\subsection{Gauss-Legendre Quadrature}
+		Table~\ref{table: results gauss-legendre} shows the results of the program which calculates the integral of eq.~\eqref{eq: unchanged integral} using Gauss-Legendre quadrature. 
+		\begin{table}[H]
+			\centering
+			\caption{Results from a run of the program which calculates the integral using Gauss-Legendre quadrature. The CPU-times listed are averaged over 10 runs of the program.}
+			\label{table: results gauss-legendre}
+			\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{N} 	&	\textbf{Result}	&	\textbf{Relative error}	&	\textbf{CPU-time} \\ \hline 
+10 	&	0.12983	&	0.32647			&	$0.11 \pm 0.00$ s	\\ \hline
+16 	&	0.16786	&	0.12920			&	$1.91 \pm 0.12$ s	\\ \hline
+20 	&	0.17707	&	0.08145			&	$7.03 \pm 0.23$ s	\\ \hline
+24 	&	0.18194	&	0.05615			&	$20.83 \pm 0.27$ s	\\ \hline
+30 	&	0.18580	&	0.03616			&	$78.84 \pm 0.94$ s	\\ \hline
+36 	&	0.18782	&	0.02567			&	$233.70 \pm 1.70$ s	\\ \hline
+40 	&	0.18867	&	0.02125			&	$444.08 \pm 7.15$ s	\\ \hline			
+			\end{tabular}\\
+		\textbf{Exact:} 0.192766
+		\end{table}
+	
+	
+	\subsection{Gauss-Laguerre Quadrature}
+		\begin{table}[H]
+			\centering
+			\caption{Results from a run of the program which calculates the integral using Gauss-Laguerre quadrature. The CPU-times listed are averaged over 4 runs of the program.}
+			\label{table: results gauss-laguerre}
+			\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{N} 	&	\textbf{Result}	&	\textbf{Relative error}	&	\textbf{CPU-time} \\ \hline 
+10 	&	0.18646	&	0.03273			&	$0.35 \pm 0.12$ s	\\ \hline
+16 	&	0.19011	&	0.01376			&	$4.17 \pm 0.07$ s	\\ \hline
+20 	&	0.19108	&	0.00873			&	$16.15 \pm 0.41$ s	\\ \hline
+24 	&	0.19164	&	0.00584			&	$47.87 \pm 0.18$ s	\\ \hline
+30 	&	0.19211	&	0.00338			&	$190.19 \pm 13.30$ s	\\ \hline
+36 	&	0.19238	&	0.00201			&	$550.29 \pm 25.89$ s	\\ \hline
+40 	&	0.19249	&	0.00141			&	$1217.45 \pm 71.18$ s	\\ \hline	
+			\end{tabular}
+		\end{table}
+	
 
 
 
 
+\section{Discussion}
 
-\section{Results}
+\section{Conclusion}
 
 
 %\bibliographystyle{plain}
